@@ -1,20 +1,53 @@
 <!DOCTYPE html>
+<!--
 
 <html lang="id">
+<!-- lang="id" → memberitahu browser bahwa bahasa halaman adalah
+     Bahasa Indonesia. Berguna untuk screen reader & SEO. -->
+
 <head>
+  <!-- ════════════════════════════════════════════════════
+    SECTION: HEAD
+    Berisi metadata dan styling. Tidak tampil secara visual.
+    ════════════════════════════════════════════════════ -->
+
+  <!-- charset UTF-8: wajib agar karakter khusus (é, ö, dll)
+       dan emoji terbaca dengan benar di semua browser -->
   <meta charset="UTF-8">
+
+  <!-- viewport: membuat halaman menyesuaikan lebar layar perangkat.
+       Tanpa ini, halaman akan tampil seperti versi desktop kecil
+       di ponsel (perlu di-zoom manual oleh pengguna). -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- title: teks yang muncul di tab browser -->
   <title>Data Mahasiswa</title>
 
   <style>
-    /* Reset dasar & font */
+    /* ════════════════════════════════════════════════════
+       CSS SECTION
+       Semua aturan tampilan visual didefinisikan di sini.
+       Urutan: body → form → input → tombol → tabel → komponen khusus
+       ════════════════════════════════════════════════════ */
+
+    /* ── BODY ───────────────────────────────────────────
+       Pengaturan dasar seluruh halaman.
+       font-family: Arial sebagai font utama, sans-serif sebagai fallback
+                    jika Arial tidak tersedia di perangkat.
+       margin: 20px → jarak dari tepi browser ke konten.
+       background: #f696ce → warna latar pink cerah. */
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
       background: #f696ce;
     }
 
-    /* Panel form: latar putih dengan sudut melengkung */
+    /* ── FORM ───────────────────────────────────────────
+       Panel putih pembungkus semua elemen input.
+       background #fff  → latar putih agar kontras dengan body pink.
+       padding 20px     → jarak antara tepi form dan isi di dalamnya.
+       border-radius    → sudut melengkung agar tampilan lebih modern.
+       margin-bottom    → jarak antara form dan tabel di bawahnya. */
     form {
       background: #fff;
       padding: 20px;
@@ -22,7 +55,15 @@
       margin-bottom: 20px;
     }
 
-    /* Semua input, textarea, select: lebar penuh */
+    /* ── INPUT / TEXTAREA / SELECT ──────────────────────
+       Selector ini menargetkan semua elemen input KECUALI radio button.
+       :not([type="radio"]) → pengecualian khusus untuk radio button
+         agar tidak ikut melebar 100% (radio tampil inline kecil).
+       width: 100%          → melebar sepenuhnya mengikuti form.
+       padding: 8px         → ruang dalam elemen agar teks tidak mepet.
+       margin: 5px 0 15px   → jarak atas 5px, bawah 15px antar field.
+       box-sizing: border-box → penting! agar padding tidak menambah
+         lebar elemen (tanpa ini elemen bisa melebihi 100% form). */
     input:not([type="radio"]),
     textarea,
     select {
@@ -32,7 +73,14 @@
       box-sizing: border-box;
     }
 
-    /* Styling tombol dasar */
+    /* ── BUTTON ─────────────────────────────────────────
+       Styling dasar untuk semua tombol di halaman.
+       padding     → ruang dalam tombol agar tidak terlalu kecil.
+       margin-right → jarak antar tombol jika ada beberapa berdampingan.
+       border: none → hapus border bawaan browser.
+       border-radius → sudut melengkung.
+       cursor: pointer → kursor berubah jadi tangan saat hover
+                         memberi tahu pengguna bahwa ini bisa diklik. */
     button {
       padding: 10px;
       margin-right: 5px;
@@ -41,11 +89,20 @@
       cursor: pointer;
     }
 
-    /* Warna tombol Submit (hijau) dan Reset (merah) */
+    /* ── TOMBOL SUBMIT & RESET ───────────────────────────
+       Dua kelas warna berbeda untuk tombol utama form.
+       .submit → hijau  : tindakan positif (menyimpan data).
+       .reset  → merah  : tindakan destruktif (menghapus isian form). */
     .submit { background: green;          color: white; }
     .reset  { background: rgb(252,12,28); color: white; }
 
-    /* Bar indikator mode edit — tersembunyi secara default */
+    /* ── BAR MODE EDIT ───────────────────────────────────
+       Div ini tersembunyi secara default (display: none).
+       Akan muncul (display: block) saat pengguna klik tombol Edit
+       di tabel, diaktifkan oleh fungsi edit() di JavaScript.
+       Warna kuning (#fff8e1 + border #f59e0b) memberi sinyal visual
+       bahwa form sedang dalam kondisi "mode edit", bukan tambah baru.
+       font-weight: bold → teks lebih tebal agar mudah terbaca. */
     #editModeBar {
       display: none;
       background: #fff8e1;
@@ -57,328 +114,757 @@
       color: #92400e;
     }
 
-    /* Container Pencarian */
+    /* ── CONTAINER PENCARIAN ────────────────────────────
+       Membungkus input pencarian di sebelah judul tabel.
+       display: flex         → mengaktifkan Flexbox.
+       justify-content: flex-end → mendorong input ke kanan.
+       margin-bottom: 10px  → jarak ke tabel di bawahnya. */
     .search-container {
       display: flex;
       justify-content: flex-end;
       margin-bottom: 10px;
     }
 
-    /* Input Pencarian Khusus */
+    /* ── INPUT PENCARIAN ────────────────────────────────
+       Override khusus untuk input pencarian (#searchInput).
+       Tidak ikut aturan input global (yang 100%) karena
+       dicantumkan setelah aturan global — CSS cascade berlaku.
+       width: 300px → lebar tetap agar tidak memenuhi seluruh baris.
+       margin: 0    → hapus margin bawaan dari selector input di atas.
+       border       → tambahkan border agar terlihat sebagai kotak input.
+       border-radius → konsisten dengan elemen lain. */
     #searchInput {
-      width: 300px; /* Lebar khusus untuk search */
+      width: 300px;
       margin: 0;
       border: 1px solid #ccc;
       border-radius: 5px;
     }
 
-    /* Tabel data: lebar penuh, latar putih */
+    /* ── TABEL ───────────────────────────────────────────
+       width: 100%           → tabel melebar penuh mengisi halaman.
+       border-collapse: collapse → menggabungkan border antar sel
+         menjadi satu garis (tanpa ini ada gap ganda antar sel).
+       background: #fff      → latar putih kontras dengan pink. */
     table {
       width: 100%;
       border-collapse: collapse;
       background: #fff;
     }
 
-    /* Sel tabel: garis tipis abu, padding, rata tengah */
+    /* ── SEL TABEL (th & td) ────────────────────────────
+       border      → garis tipis abu di semua sisi setiap sel.
+       padding     → ruang dalam sel agar teks tidak mepet ke garis.
+       text-align  → teks rata tengah di semua sel. */
     th, td {
       border: 1px solid #ccc;
       padding: 10px;
       text-align: center;
     }
 
-    /* Header tabel: latar abu gelap & teks putih */
+    /* ── HEADER TABEL ────────────────────────────────────
+       Khusus untuk baris <thead>.
+       background #555 → abu gelap, membedakan header dari isi.
+       color #fff      → teks putih agar kontras dengan latar gelap. */
     th {
       background: #555;
       color: #fff;
     }
 
-    /* Baris genap diberi warna berbeda agar mudah dibaca */
+    /* ── ZEBRA STRIPING TABEL ────────────────────────────
+       nth-child(even) → menargetkan baris GENAP (2, 4, 6, ...).
+       Baris ganjil tetap putih (default dari tabel).
+       Teknik "zebra striping" ini mempermudah mata mengikuti
+       satu baris data tanpa tertukar ke baris lain. */
     tbody tr:nth-child(even) {
-      background: #fce4f3;
+      background: #fce4f3; /* pink muda, senada dengan latar body */
     }
 
-    /* Tombol Edit (kuning) dan Hapus (merah) di kolom Aksi */
+    /* ── TOMBOL EDIT & HAPUS (di kolom Aksi tabel) ───────
+       Dua tombol aksi kecil di setiap baris tabel.
+       .btn-edit  → kuning (#f59e0b) : tindakan netral (mengubah).
+       .btn-hapus → merah (#ef4444)  : tindakan berbahaya (menghapus).
+       padding & border-radius → tombol kecil dengan sudut melengkung.
+       margin-right pada .btn-edit → jarak antara dua tombol. */
     .btn-edit  { background: #f59e0b; color: white; padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; margin-right: 4px; }
     .btn-hapus { background: #ef4444; color: white; padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; }
 
-    /* Teks password di tabel: warna abu agar terkesan disembunyikan */
+    /* ── MASKING PASSWORD DI TABEL ───────────────────────
+       Kelas ini diterapkan pada <td> kolom Password.
+       color: #999         → abu muda, memberi kesan "tersembunyi".
+       letter-spacing: 3px → jarak antar karakter ● lebih lebar
+                             sehingga terlihat seperti karakter mask
+                             pada form password sungguhan. */
     .pass-mask { color: #999; letter-spacing: 3px; }
+
   </style>
 </head>
 <body>
+  <!-- ════════════════════════════════════════════════════
+    SECTION: BODY
+    Semua konten yang ditampilkan di browser ada di sini.
+    Terdiri dari tiga bagian utama:
+      1. #editModeBar  → indikator mode edit (tersembunyi default)
+      2. <form>        → panel input data mahasiswa
+      3. <table>       → tabel tampilan data + pencarian
+    ════════════════════════════════════════════════════ -->
 
-<h2>Form Data Mahasiswa</h2>
+  <!-- ── JUDUL HALAMAN ─────────────────────────────────
+    <h2> dipilih (bukan <h1>) karena ini bukan judul situs,
+    melainkan judul satu fitur dalam halaman. -->
+  <h2>Form Data Mahasiswa</h2>
 
-<!-- Bar kuning muncul saat mode Edit aktif -->
-<div id="editModeBar">
-  ✏️ Mode Edit — ubah data lalu klik Submit
-  <button type="button" onclick="batalEdit()" style="margin-left:12px;background:#92400e;color:white;padding:4px 10px;border:none;border-radius:4px;cursor:pointer;">
-    ✕ Batal
-  </button>
-</div>
-
-<form id="formMahasiswa">
-  <label>NIM</label>
-  <input type="text" id="nim" maxlength="20" placeholder="Contoh: 2021001234" required>
-
-  <label>Nama</label>
-  <input type="text" id="nama" placeholder="Nama lengkap" required>
-
-  <label>Alamat</label>
-  <textarea id="alamat" rows="3" placeholder="Jalan, RT/RW, Kota..."></textarea>
-
-  <label>Jenis Kelamin</label><br>
-  <input type="radio" name="jk" value="Pria">   Pria &nbsp;
-  <input type="radio" name="jk" value="Wanita"> Wanita
-  <br><br>
-
-  <label>Tanggal Lahir</label>
-  <select id="tanggal"></select>
-  <select id="bulan">
-    <option value="01">Januari</option>
-    <option value="02">Februari</option>
-    <option value="03">Maret</option>
-    <option value="04">April</option>
-    <option value="05">Mei</option>
-    <option value="06">Juni</option>
-    <option value="07">Juli</option>
-    <option value="08">Agustus</option>
-    <option value="09">September</option>
-    <option value="10">Oktober</option>
-    <option value="11">November</option>
-    <option value="12">Desember</option>
-  </select>
-  <select id="tahun"></select>
-
-  <label>Password</label>
-  <input type="password" id="password" placeholder="Opsional">
-
-  <br>
-  <button type="submit" class="submit" id="btnSubmit">Submit</button>
-  <button type="button" class="reset"  onclick="resetForm()">Reset</button>
-</form>
-
-<!-- Header Data dan Fitur Pencarian -->
-<div style="display: flex; justify-content: space-between; align-items: flex-end;">
-  <h2>Data Mahasiswa</h2>
-  <div class="search-container">
-    <!-- oninput memicu fungsi render() setiap kali user mengetik sesuatu -->
-    <input type="text" id="searchInput" placeholder="🔍 Cari NIM atau Nama..." oninput="render()">
+  <!-- ── BAR MODE EDIT ──────────────────────────────────
+    Div ini TERSEMBUNYI saat halaman pertama dibuka.
+    Akan muncul (display:block) ketika fungsi edit(idx)
+    dipanggil via tombol ✏️ Edit di tabel.
+    Berisi teks penanda + tombol "✕ Batal" untuk keluar
+    dari mode edit tanpa menyimpan perubahan. -->
+  <div id="editModeBar">
+    ✏️ Mode Edit — ubah data lalu klik Submit
+    <!-- Tombol Batal: type="button" agar tidak memicu submit form.
+         onclick="batalEdit()" → memanggil fungsi batalEdit() di JS
+         yang mereset form dan menyembunyikan bar ini kembali.
+         Style inline dipakai di sini karena tombol ini unik
+         (hanya ada satu) sehingga tidak perlu kelas CSS khusus. -->
+    <button type="button" onclick="batalEdit()"
+      style="margin-left:12px;background:#92400e;color:white;
+             padding:4px 10px;border:none;border-radius:4px;cursor:pointer;">
+      ✕ Batal
+    </button>
   </div>
-</div>
 
-<table>
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>NIM</th>
-      <th>Nama</th>
-      <th>Alamat</th>
-      <th>JK</th>
-      <th>TTL</th>
-      <th>Password</th>
-      <th>Aksi</th>
-    </tr>
-  </thead>
-  <tbody id="tableBody"></tbody>
-</table>
+  <!-- ── FORM INPUT DATA MAHASISWA ─────────────────────
+    id="formMahasiswa" → digunakan oleh addEventListener di JS
+    untuk menangkap event submit.
+    Tidak ada action atau method karena tidak ada server —
+    data diproses sepenuhnya oleh JavaScript. -->
+  <form id="formMahasiswa">
 
-<script>
-  // Inisialisasi dropdown tanggal dan tahun
-  const selTanggal = document.getElementById('tanggal');
-  const selBulan   = document.getElementById('bulan');
-  const selTahun   = document.getElementById('tahun');
+    <!-- FIELD: NIM ──────────────────────────────────────
+      type="text"    → input teks biasa satu baris.
+      id="nim"       → diakses JS dengan getElementById('nim').
+      maxlength="20" → batasi panjang input agar tidak terlalu panjang.
+      placeholder    → teks contoh abu yang tampil saat field kosong.
+      required       → atribut HTML bawaan (validasi tambahan ada di JS). -->
+    <label>NIM</label>
+    <input type="text" id="nim" maxlength="20" placeholder="Contoh: 2021001234" required>
 
-  for (let d = 1; d <= 31; d++) {
-    const val = String(d).padStart(2, '0');
-    selTanggal.innerHTML += `<option value="${val}">${val}</option>`;
-  }
+    <!-- FIELD: NAMA ─────────────────────────────────────
+      type="text" → input teks biasa.
+      required    → wajib diisi (juga dicek ulang di JS). -->
+    <label>Nama</label>
+    <input type="text" id="nama" placeholder="Nama lengkap" required>
 
-  const tahunSekarang = new Date().getFullYear();
-  for (let y = tahunSekarang; y >= 1970; y--) {
-    selTahun.innerHTML += `<option value="${y}">${y}</option>`;
-  }
+    <!-- FIELD: ALAMAT ───────────────────────────────────
+      <textarea> dipilih (bukan <input>) karena alamat bisa
+      terdiri dari beberapa baris (jalan, RT/RW, kota, dll).
+      rows="3" → tinggi awal 3 baris teks.
+      Tidak ada required → alamat bersifat opsional. -->
+    <label>Alamat</label>
+    <textarea id="alamat" rows="3" placeholder="Jalan, RT/RW, Kota..."></textarea>
 
-  const NAMA_BULAN = [
-    'Januari','Februari','Maret','April','Mei','Juni',
-    'Juli','Agustus','September','Oktober','November','Desember'
-  ];
+    <!-- FIELD: JENIS KELAMIN ────────────────────────────
+      Menggunakan <input type="radio"> bukan <select> karena
+      pilihan hanya dua dan lebih intuitif tampil berdampingan.
+      name="jk" → kedua radio harus nama sama agar hanya
+                  satu yang bisa dipilih (mereka satu grup).
+      value="Pria"/"Wanita" → nilai yang akan disimpan ke data.
+      &nbsp; → spasi non-breaking antara tombol Pria dan Wanita. -->
+    <label>Jenis Kelamin</label><br>
+    <input type="radio" name="jk" value="Pria"> Pria &nbsp;
+    <input type="radio" name="jk" value="Wanita"> Wanita
+    <br><br>
 
-  // Fungsi LocalStorage
-  function getData() {
-    return JSON.parse(localStorage.getItem('mahasiswa') || '[]');
-  }
+    <!-- FIELD: TANGGAL LAHIR ────────────────────────────
+      Dibagi menjadi tiga <select> terpisah (tanggal, bulan, tahun)
+      bukan <input type="date"> agar tampilan lebih konsisten
+      di semua browser dan mudah dikustomisasi.
 
-  function saveData(arr) {
-    localStorage.setItem('mahasiswa', JSON.stringify(arr));
-  }
+      #tanggal → diisi JavaScript: pilihan 01–31
+      #bulan   → ditulis statis di HTML: Januari–Desember
+      #tahun   → diisi JavaScript: tahun sekarang mundur ke 1970 -->
+    <label>Tanggal Lahir</label>
 
-  let editIdx = -1;
+    <!-- Dropdown tanggal: kosong di HTML, diisi loop JS (01-31) -->
+    <select id="tanggal"></select>
 
-  // ----------------------------------------------------------
-  // RENDER DENGAN FITUR PENCARIAN
-  // ----------------------------------------------------------
-  function render() {
-    const data  = getData();
-    const tbody = document.getElementById('tableBody');
-    
-    // Ambil kata kunci pencarian (jadikan huruf kecil semua agar tidak case-sensitive)
-    const searchInput = document.getElementById('searchInput');
-    const keyword = searchInput ? searchInput.value.toLowerCase() : '';
+    <!-- Dropdown bulan: ditulis manual karena nama bulan tetap
+         dan value dua digit ("01"–"12") untuk konsistensi format -->
+    <select id="bulan">
+      <option value="01">Januari</option>
+      <option value="02">Februari</option>
+      <option value="03">Maret</option>
+      <option value="04">April</option>
+      <option value="05">Mei</option>
+      <option value="06">Juni</option>
+      <option value="07">Juli</option>
+      <option value="08">Agustus</option>
+      <option value="09">September</option>
+      <option value="10">Oktober</option>
+      <option value="11">November</option>
+      <option value="12">Desember</option>
+    </select>
 
-    // Filter data berdasarkan kata kunci (mencari kecocokan di NIM atau Nama)
-    const filteredData = data.filter(m => 
-      m.nim.toLowerCase().includes(keyword) || 
-      m.nama.toLowerCase().includes(keyword)
-    );
+    <!-- Dropdown tahun: kosong di HTML, diisi loop JS
+         dari tahun sekarang mundur sampai 1970 -->
+    <select id="tahun"></select>
 
-    // Jika data kosong atau hasil pencarian tidak ada
-    if (filteredData.length === 0) {
-      const pesan = keyword ? `Pencarian "${keyword}" tidak ditemukan.` : 'Belum ada data. Silakan isi form di atas.';
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="8" style="color:#999;font-style:italic;padding:20px;">
-            ${pesan}
-          </td>
-        </tr>`;
-      return;
-    }
+    <!-- FIELD: PASSWORD ─────────────────────────────────
+      type="password" → karakter otomatis disembunyikan (tampil ●)
+                        saat pengguna mengetik. Ini perilaku bawaan
+                        browser, bukan logika JavaScript.
+      Tidak ada required → password bersifat opsional.
+      Di tabel, password ditampilkan sebagai ●●● via JavaScript
+      (bukan oleh type="password" ini). -->
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Opsional">
 
-    // Render baris tabel dari data yang sudah difilter
-    tbody.innerHTML = filteredData.map((m, i) => {
-      // PENTING: Cari indeks asli dari array keseluruhan agar fungsi Edit & Hapus tidak salah target!
-      const originalIdx = data.indexOf(m);
+    <br>
+    <!-- TOMBOL SUBMIT ───────────────────────────────────
+      type="submit" → memicu event 'submit' pada form saat diklik,
+                      yang ditangkap addEventListener di JavaScript.
+      id="btnSubmit" → diakses JS untuk mengubah teks & warna
+                       tombol saat mode edit aktif. -->
+    <button type="submit" class="submit" id="btnSubmit">Submit</button>
 
-      return `
+    <!-- TOMBOL RESET ────────────────────────────────────
+      type="button" → BUKAN type="reset"!
+      Menggunakan type="button" + onclick="resetForm()" karena
+      type="reset" bawaan HTML tidak bisa mereset:
+        - radio button yang dipilih via JavaScript
+        - <select> yang opsinya dibuat via JavaScript
+      Fungsi resetForm() di JS mengosongkan semuanya secara manual. -->
+    <button type="button" class="reset" onclick="resetForm()">Reset</button>
+
+  </form>
+
+  <!-- ── HEADER TABEL + PENCARIAN ──────────────────────
+    Menggunakan flexbox inline (style langsung) untuk meletakkan
+    judul "Data Mahasiswa" di kiri dan kotak pencarian di kanan
+    dalam satu baris yang sama.
+    align-items: flex-end → menyelaraskan keduanya di bagian bawah
+    sehingga teks h2 dan input sejajar bagian bawahnya. -->
+  <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+    <h2>Data Mahasiswa</h2>
+
+    <div class="search-container">
+      <!-- INPUT PENCARIAN ─────────────────────────────
+        oninput="render()" → fungsi render() dipanggil SETIAP
+          kali pengguna mengetik/menghapus karakter di sini.
+          Ini menciptakan efek pencarian real-time tanpa tombol.
+        oninput dipilih (bukan onkeyup/onchange) karena:
+          - onkeyup tidak menangkap paste dari klik kanan
+          - onchange hanya memicu saat focus berpindah
+          - oninput menangkap semua cara input termasuk paste -->
+      <input type="text" id="searchInput"
+             placeholder="🔍 Cari NIM atau Nama..."
+             oninput="render()">
+    </div>
+  </div>
+
+  <!-- ── TABEL DATA MAHASISWA ───────────────────────────
+    <thead> → baris header, ditulis statis di HTML karena
+              tidak berubah.
+    <tbody id="tableBody"> → isi baris dirender ulang secara
+              dinamis oleh fungsi render() setiap kali
+              data berubah (tambah/edit/hapus/cari). -->
+  <table>
+    <thead>
       <tr>
-        <td>${i + 1}</td>
-        <td>${m.nim}</td>
-        <td>${m.nama}</td>
-        <td>${m.alamat || '-'}</td>
-        <td>${m.jk}</td>
-        <td>${m.tanggal} ${NAMA_BULAN[parseInt(m.bulan) - 1]} ${m.tahun}</td>
-        <td class="pass-mask">${m.password ? '●'.repeat(m.password.length) : '-'}</td>
-        <td>
-          <!-- Gunakan originalIdx untuk memastikan target edit dan hapus tetap akurat -->
-          <button class="btn-edit"  onclick="edit(${originalIdx})">✏️ Edit</button>
-          <button class="btn-hapus" onclick="hapus(${originalIdx})">🗑 Hapus</button>
-        </td>
+        <th>#</th>        <!-- Nomor urut baris (1, 2, 3, ...) -->
+        <th>NIM</th>      <!-- Nomor Induk Mahasiswa -->
+        <th>Nama</th>     <!-- Nama lengkap mahasiswa -->
+        <th>Alamat</th>   <!-- Alamat tinggal -->
+        <th>JK</th>       <!-- Jenis Kelamin -->
+        <th>TTL</th>      <!-- Tanggal Tempat Lahir -->
+        <th>Password</th> <!-- Ditampilkan ter-mask (●●●) -->
+        <th>Aksi</th>     <!-- Tombol Edit dan Hapus -->
       </tr>
-    `}).join('');
-  }
+    </thead>
 
-  // Event Listener Form Submit
-  document.getElementById('formMahasiswa').addEventListener('submit', function (e) {
-    e.preventDefault();
+    <!-- tbody dikosongkan → akan diisi oleh JavaScript (render())
+         saat halaman pertama dimuat dan setiap kali data berubah -->
+    <tbody id="tableBody"></tbody>
+  </table>
 
-    const nim      = document.getElementById('nim').value.trim();
-    const nama     = document.getElementById('nama').value.trim();
-    const alamat   = document.getElementById('alamat').value.trim();
-    const jkEl     = document.querySelector('input[name="jk"]:checked');
-    const tanggal  = selTanggal.value;
-    const bulan    = selBulan.value;
-    const tahun    = selTahun.value;
-    const password = document.getElementById('password').value;
 
-    if (!nim || !nama) {
-      alert('⚠️ NIM dan Nama wajib diisi!');
-      return;
+  <!-- ════════════════════════════════════════════════════
+    SECTION: SCRIPT
+    Semua logika JavaScript ada di sini.
+    Ditempatkan di akhir <body> (sebelum </body>) agar:
+      - Seluruh HTML sudah selesai diparse browser sebelum
+        script dijalankan
+      - getElementById dan querySelector tidak mengembalikan null
+      - Halaman terasa lebih cepat (HTML render dulu, JS belakangan)
+
+    DAFTAR FUNGSI:
+      getData()    → baca data dari localStorage
+      saveData()   → tulis data ke localStorage
+      render()     → gambar ulang isi tabel (+ filter pencarian)
+      [submit]     → tangkap submit form, validasi, simpan/update
+      edit(idx)    → isi form dengan data baris yang dipilih
+      batalEdit()  → batalkan mode edit, kembalikan ke mode tambah
+      hapus(idx)   → hapus satu data berdasarkan indeks
+      resetForm()  → kosongkan semua field form
+    ════════════════════════════════════════════════════ -->
+  <script>
+
+    // ──────────────────────────────────────────────────
+    // INISIALISASI REFERENSI ELEMEN
+    // Simpan referensi ke elemen <select> tanggal/bulan/tahun
+    // di variabel agar tidak perlu getElementById berulang kali.
+    // ──────────────────────────────────────────────────
+    const selTanggal = document.getElementById('tanggal');
+    const selBulan   = document.getElementById('bulan');
+    const selTahun   = document.getElementById('tahun');
+
+
+    // ──────────────────────────────────────────────────
+    // INISIALISASI DROPDOWN TANGGAL (01–31)
+    // Mengisi <select id="tanggal"> dengan 31 opsi.
+    // String(d).padStart(2,'0') → memastikan selalu 2 digit:
+    //   1 → "01", 9 → "09", 10 → "10", 31 → "31"
+    // Template literal (``) → cara modern membuat string
+    //   dengan variabel di dalamnya (ES6+).
+    // innerHTML += → menambahkan HTML baru ke dalam select
+    //   tanpa menghapus opsi yang sudah ada.
+    // ──────────────────────────────────────────────────
+    for (let d = 1; d <= 31; d++) {
+      const val = String(d).padStart(2, '0');
+      selTanggal.innerHTML += `<option value="${val}">${val}</option>`;
     }
-    if (!jkEl) {
-      alert('⚠️ Jenis Kelamin wajib dipilih!');
-      return;
+
+
+    // ──────────────────────────────────────────────────
+    // INISIALISASI DROPDOWN TAHUN (tahun sekarang → 1970)
+    // new Date().getFullYear() → mengambil tahun saat ini
+    //   dari sistem, otomatis selalu terkini.
+    // Loop mundur (dari besar ke kecil) agar tahun terbaru
+    //   muncul di atas daftar (posisi default terpilih).
+    // ──────────────────────────────────────────────────
+    const tahunSekarang = new Date().getFullYear();
+    for (let y = tahunSekarang; y >= 1970; y--) {
+      selTahun.innerHTML += `<option value="${y}">${y}</option>`;
     }
 
-    const dataBaru = { nim, nama, alamat, jk: jkEl.value, tanggal, bulan, tahun, password };
-    const data = getData();
 
-    if (editIdx >= 0) {
-      const duplikat = data.some((m, i) => m.nim === nim && i !== editIdx);
-      if (duplikat) {
-        alert('⚠️ NIM sudah dipakai mahasiswa lain!');
+    // ──────────────────────────────────────────────────
+    // ARRAY NAMA BULAN
+    // Digunakan untuk mengubah angka bulan ("01") menjadi
+    // nama ("Januari") saat menampilkan TTL di tabel.
+    // Indeks 0 = Januari, 11 = Desember (basis 0 JavaScript).
+    // Penggunaan: NAMA_BULAN[parseInt("01") - 1] → "Januari"
+    // ──────────────────────────────────────────────────
+    const NAMA_BULAN = [
+      'Januari','Februari','Maret','April','Mei','Juni',
+      'Juli','Agustus','September','Oktober','November','Desember'
+    ];
+
+
+    // ──────────────────────────────────────────────────
+    // FUNGSI: getData()
+    // Membaca dan mengembalikan array data mahasiswa
+    // dari localStorage browser.
+    //
+    // localStorage.getItem('mahasiswa') → mengambil string JSON
+    //   yang tersimpan. Mengembalikan null jika belum ada data.
+    // || '[]' → jika null, gunakan string array kosong sebagai default
+    //   sehingga JSON.parse tidak error.
+    // JSON.parse() → mengubah string JSON menjadi array JavaScript
+    //   yang bisa dimanipulasi.
+    //
+    // Contoh return value:
+    //   [{ nim:"2021001", nama:"Budi", ... }, { ... }]
+    // ──────────────────────────────────────────────────
+    function getData() {
+      return JSON.parse(localStorage.getItem('mahasiswa') || '[]');
+    }
+
+
+    // ──────────────────────────────────────────────────
+    // FUNGSI: saveData(arr)
+    // Menyimpan array data mahasiswa ke localStorage.
+    //
+    // JSON.stringify(arr) → mengubah array JavaScript menjadi
+    //   string JSON karena localStorage hanya menyimpan string.
+    // localStorage.setItem(key, value) → menyimpan dengan key
+    //   'mahasiswa'. Data akan tetap ada meski browser ditutup
+    //   dan dibuka kembali (berbeda dengan sessionStorage).
+    //
+    // Parameter:
+    //   arr → array objek mahasiswa yang akan disimpan
+    // ──────────────────────────────────────────────────
+    function saveData(arr) {
+      localStorage.setItem('mahasiswa', JSON.stringify(arr));
+    }
+
+
+    // ──────────────────────────────────────────────────
+    // VARIABEL: editIdx
+    // Menyimpan status mode form saat ini.
+    //   -1        → mode TAMBAH (default): form kosong, submit = tambah baru
+    //   0, 1, 2,..→ mode EDIT: angka = indeks baris yang sedang diedit
+    //
+    // Variabel ini dideklarasikan di luar fungsi (global scope)
+    // agar bisa diakses dan diubah oleh semua fungsi.
+    // ──────────────────────────────────────────────────
+    let editIdx = -1;
+
+
+    // ──────────────────────────────────────────────────
+    // FUNGSI: render()
+    // Menggambar ulang seluruh isi tabel berdasarkan data
+    // di localStorage dan kata kunci pencarian saat ini.
+    // Dipanggil: saat halaman pertama dibuka, setelah tambah/
+    //            edit/hapus data, dan setiap ketik di search.
+    //
+    // ALUR:
+    //   1. Ambil data dari localStorage
+    //   2. Ambil kata kunci dari input pencarian
+    //   3. Filter data berdasarkan kata kunci
+    //   4. Jika hasil kosong → tampilkan pesan
+    //   5. Jika ada hasil   → render baris-baris tabel
+    // ──────────────────────────────────────────────────
+    function render() {
+      const data  = getData();
+      const tbody = document.getElementById('tableBody');
+
+      // Ambil nilai input pencarian, ubah ke huruf kecil semua
+      // agar pencarian tidak case-sensitive (contoh: "budi" = "Budi").
+      // Optional chaining (?.) dan fallback ('') → aman jika elemen
+      // belum ada di DOM saat render() pertama dipanggil.
+      const searchInput = document.getElementById('searchInput');
+      const keyword = searchInput ? searchInput.value.toLowerCase() : '';
+
+      // Filter data: hanya tampilkan mahasiswa yang NIM atau Namanya
+      // mengandung kata kunci. .includes() → cek apakah string
+      // mengandung substring tertentu (mengembalikan true/false).
+      const filteredData = data.filter(m =>
+        m.nim.toLowerCase().includes(keyword) ||
+        m.nama.toLowerCase().includes(keyword)
+      );
+
+      // Jika tidak ada data yang cocok (atau data memang kosong):
+      // Tampilkan satu baris pesan yang mencakup semua kolom (colspan="8").
+      // Pesan berbeda tergantung konteks: kosong total vs tidak ditemukan.
+      if (filteredData.length === 0) {
+        const pesan = keyword
+          ? `Pencarian "${keyword}" tidak ditemukan.`
+          : 'Belum ada data. Silakan isi form di atas.';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="color:#999;font-style:italic;padding:20px;">
+              ${pesan}
+            </td>
+          </tr>`;
+        return; // hentikan eksekusi, tidak perlu render baris data
+      }
+
+      // Render baris tabel dari data yang sudah difilter.
+      // .map() → mengubah setiap objek mahasiswa menjadi string HTML <tr>.
+      // .join('') → menggabungkan semua string menjadi satu tanpa pemisah.
+      tbody.innerHTML = filteredData.map((m, i) => {
+
+        // PENTING: originalIdx vs i
+        // 'i' adalah indeks dalam filteredData (hasil filter).
+        // Jika ada pencarian aktif, 'i' tidak sama dengan posisi
+        // asli di array data. Contoh: mahasiswa ke-3 di data
+        // mungkin muncul sebagai baris ke-1 di hasil filter.
+        // data.indexOf(m) → mencari posisi objek 'm' di array
+        // data asli, sehingga edit() dan hapus() tepat sasaran.
+        const originalIdx = data.indexOf(m);
+
+        return `
+          <tr>
+            <td>${i + 1}</td>
+            <!-- i+1 → nomor urut tampilan (1,2,3,...), bukan indeks asli -->
+
+            <td>${m.nim}</td>
+            <td>${m.nama}</td>
+
+            <!-- Jika alamat kosong (''), tampilkan tanda '-' -->
+            <td>${m.alamat || '-'}</td>
+
+            <td>${m.jk}</td>
+
+            <!-- Format TTL: "01 Januari 2000"
+                 parseInt(m.bulan) - 1 → konversi "01" ke indeks 0
+                 lalu ambil nama bulan dari array NAMA_BULAN -->
+            <td>${m.tanggal} ${NAMA_BULAN[parseInt(m.bulan) - 1]} ${m.tahun}</td>
+
+            <!-- Password di-mask: tampilkan ● sebanyak panjang password.
+                 '●'.repeat(n) → membuat string berisi n karakter ●.
+                 Jika password kosong → tampilkan '-' -->
+            <td class="pass-mask">${m.password ? '●'.repeat(m.password.length) : '-'}</td>
+
+            <td>
+              <!-- Gunakan originalIdx (bukan i) agar edit/hapus
+                   tepat sasaran meskipun tabel sedang difilter -->
+              <button class="btn-edit"  onclick="edit(${originalIdx})">✏️ Edit</button>
+              <button class="btn-hapus" onclick="hapus(${originalIdx})">🗑 Hapus</button>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+
+    // ──────────────────────────────────────────────────
+    // EVENT LISTENER: Form Submit (Tambah / Update Data)
+    // Menangkap event 'submit' yang terpicu saat tombol
+    // type="submit" diklik atau Enter ditekan di dalam form.
+    //
+    // Menggunakan addEventListener (bukan onclick di HTML) karena:
+    //   - Lebih rapi: logika JS terpisah dari HTML
+    //   - Bisa mencegah perilaku default (reload halaman)
+    //   - Lebih mudah di-debug dan diuji
+    //
+    // e.preventDefault() mencegah browser melakukan
+    //   pengiriman form secara default (yang akan reload halaman).
+    // ──────────────────────────────────────────────────
+    document.getElementById('formMahasiswa').addEventListener('submit', function(e) {
+      e.preventDefault(); // ← WAJIB: tanpa ini halaman akan reload
+
+      // Ambil nilai dari setiap field dan bersihkan whitespace
+      // .trim() → hapus spasi di awal dan akhir string
+      //   agar " 2021001 " dianggap sama dengan "2021001"
+      const nim      = document.getElementById('nim').value.trim();
+      const nama     = document.getElementById('nama').value.trim();
+      const alamat   = document.getElementById('alamat').value.trim();
+      const password = document.getElementById('password').value;
+      // password tidak di-.trim() agar spasi bisa jadi bagian password
+
+      // querySelector dengan pseudo-class :checked → mencari
+      // radio button yang sedang dalam kondisi terpilih.
+      // Mengembalikan elemen radio atau null jika tidak ada yang dipilih.
+      const jkEl = document.querySelector('input[name="jk"]:checked');
+
+      // Ambil nilai dropdown tanggal lahir
+      const tanggal = selTanggal.value;
+      const bulan   = selBulan.value;
+      const tahun   = selTahun.value;
+
+      // ── VALIDASI INPUT ────────────────────────────
+      // Cek field wajib sebelum menyimpan.
+      // Validasi dilakukan di JS (bukan hanya HTML 'required')
+      // karena validasi HTML bawaan bisa dibypass.
+      if (!nim || !nama) {
+        alert('⚠️ NIM dan Nama wajib diisi!');
+        return; // hentikan proses, jangan lanjut simpan
+      }
+      if (!jkEl) {
+        alert('⚠️ Jenis Kelamin wajib dipilih!');
         return;
       }
-      data[editIdx] = dataBaru;
-      saveData(data);
-      render();
-      batalEdit();
-      alert('✅ Data berhasil diperbarui!');
-    } else {
-      if (data.some(m => m.nim === nim)) {
-        alert('⚠️ NIM sudah terdaftar!');
-        return;
+
+      // Buat objek data baru dari semua nilai field.
+      // Shorthand property ES6: { nim } = { nim: nim }
+      const dataBaru = { nim, nama, alamat, jk: jkEl.value, tanggal, bulan, tahun, password };
+
+      // Ambil data yang sudah ada dari localStorage
+      const data = getData();
+
+      if (editIdx >= 0) {
+        // ── MODE EDIT ──────────────────────────────
+        // editIdx >= 0 berarti sedang mengedit baris tertentu.
+
+        // Cek apakah NIM baru sudah dipakai mahasiswa LAIN.
+        // Boleh sama jika NIM itu milik baris yang sedang diedit sendiri
+        // (i !== editIdx → abaikan baris yang sedang diedit).
+        const duplikat = data.some((m, i) => m.nim === nim && i !== editIdx);
+        if (duplikat) {
+          alert('⚠️ NIM sudah dipakai mahasiswa lain!');
+          return;
+        }
+
+        // Timpa data lama di indeks editIdx dengan dataBaru
+        data[editIdx] = dataBaru;
+        saveData(data); // simpan ke localStorage
+        render();       // perbarui tampilan tabel
+        batalEdit();    // kembalikan form ke mode tambah
+        alert('✅ Data berhasil diperbarui!');
+
+      } else {
+        // ── MODE TAMBAH ────────────────────────────
+        // editIdx = -1 berarti form kosong untuk tambah data baru.
+
+        // Cek duplikat NIM di seluruh data.
+        // .some() → mengembalikan true jika minimal satu elemen
+        //   memenuhi kondisi (ada NIM yang sama).
+        if (data.some(m => m.nim === nim)) {
+          alert('⚠️ NIM sudah terdaftar!');
+          return;
+        }
+
+        // Tambahkan objek baru ke akhir array
+        data.push(dataBaru);
+        saveData(data); // simpan ke localStorage
+        render();       // perbarui tampilan tabel
+        resetForm();    // kosongkan form untuk input berikutnya
+        alert('✅ Data berhasil disimpan!');
       }
-      data.push(dataBaru);
-      saveData(data);
-      render();
-      resetForm();
-      alert('✅ Data berhasil disimpan!');
-    }
-  });
-
-  // Fungsi Edit
-  function edit(idx) {
-    const data = getData();
-    const m    = data[idx];
-
-    document.getElementById('nim').value      = m.nim;
-    document.getElementById('nama').value     = m.nama;
-    document.getElementById('alamat').value   = m.alamat;
-    document.getElementById('password').value = m.password;
-
-    document.querySelectorAll('input[name="jk"]').forEach(r => {
-      r.checked = (r.value === m.jk);
     });
 
-    selTanggal.value = m.tanggal;
-    selBulan.value   = m.bulan;
-    selTahun.value   = m.tahun;
 
-    editIdx = idx;
-    document.getElementById('editModeBar').style.display = 'block';
-    document.getElementById('btnSubmit').textContent = '💾 Update Data';
-    document.getElementById('btnSubmit').style.background = '#f59e0b';
+    // ──────────────────────────────────────────────────
+    // FUNGSI: edit(idx)
+    // Mengisi form dengan data mahasiswa yang dipilih
+    // dan mengaktifkan mode edit.
+    //
+    // Parameter:
+    //   idx → indeks baris di array data (originalIdx dari render())
+    //
+    // ALUR:
+    //   1. Ambil objek data dari array berdasarkan idx
+    //   2. Isi setiap field form dengan nilai data tersebut
+    //   3. Centang radio button yang sesuai
+    //   4. Set dropdown tanggal lahir
+    //   5. Aktifkan indikator mode edit
+    //   6. Scroll halaman ke atas agar form terlihat
+    // ──────────────────────────────────────────────────
+    function edit(idx) {
+      const data = getData();
+      const m    = data[idx]; // ambil satu objek mahasiswa
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+      // Isi field teks dengan nilai dari data
+      document.getElementById('nim').value      = m.nim;
+      document.getElementById('nama').value     = m.nama;
+      document.getElementById('alamat').value   = m.alamat;
+      document.getElementById('password').value = m.password;
 
-  // Fungsi Batal Edit
-  function batalEdit() {
-    editIdx = -1;
-    document.getElementById('editModeBar').style.display = 'none';
-    document.getElementById('btnSubmit').textContent       = 'Submit';
-    document.getElementById('btnSubmit').style.background  = 'green';
-    resetForm();
-  }
+      // Centang radio button yang nilainya cocok dengan m.jk.
+      // querySelectorAll → ambil SEMUA radio dengan name="jk" (NodeList).
+      // forEach → iterasi setiap radio, set checked sesuai kondisi.
+      // r.value === m.jk → true/false menentukan apakah radio dicek.
+      document.querySelectorAll('input[name="jk"]').forEach(r => {
+        r.checked = (r.value === m.jk);
+      });
 
-  // Fungsi Hapus
-  function hapus(idx) {
-    const konfirmasi = confirm('🗑 Yakin ingin menghapus data ini?');
-    if (!konfirmasi) return;
+      // Set nilai dropdown ke nilai yang tersimpan di data.
+      // Ini akan memilih <option> yang value-nya cocok.
+      selTanggal.value = m.tanggal;
+      selBulan.value   = m.bulan;
+      selTahun.value   = m.tahun;
 
-    const data = getData();
-    data.splice(idx, 1);
-    saveData(data);
+      // Simpan indeks yang sedang diedit ke variabel global
+      editIdx = idx;
+
+      // Tampilkan bar kuning indikator mode edit
+      document.getElementById('editModeBar').style.display = 'block';
+
+      // Ubah tampilan tombol Submit menjadi "💾 Update Data"
+      // dengan warna kuning agar pengguna sadar ini mode edit
+      document.getElementById('btnSubmit').textContent      = '💾 Update Data';
+      document.getElementById('btnSubmit').style.background = '#f59e0b';
+
+      // Scroll halaman ke posisi paling atas secara halus (smooth)
+      // agar form yang sudah terisi terlihat oleh pengguna
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+
+    // ──────────────────────────────────────────────────
+    // FUNGSI: batalEdit()
+    // Membatalkan mode edit dan mengembalikan form
+    // ke kondisi mode tambah (default).
+    // Dipanggil oleh: tombol "✕ Batal" di editModeBar,
+    //                 dan secara otomatis setelah update berhasil.
+    //
+    // ALUR:
+    //   1. Reset editIdx ke -1 (kembali ke mode tambah)
+    //   2. Sembunyikan bar kuning
+    //   3. Kembalikan teks dan warna tombol Submit ke semula
+    //   4. Kosongkan semua field form via resetForm()
+    // ──────────────────────────────────────────────────
+    function batalEdit() {
+      editIdx = -1; // kembali ke mode tambah
+
+      // Sembunyikan bar indikator mode edit
+      document.getElementById('editModeBar').style.display = 'none';
+
+      // Kembalikan tombol Submit ke kondisi awal (hijau, teks "Submit")
+      document.getElementById('btnSubmit').textContent      = 'Submit';
+      document.getElementById('btnSubmit').style.background = 'green';
+
+      // Kosongkan semua field form
+      resetForm();
+    }
+
+
+    // ──────────────────────────────────────────────────
+    // FUNGSI: hapus(idx)
+    // Menghapus satu data mahasiswa berdasarkan indeks.
+    // Dipanggil oleh tombol 🗑 Hapus di setiap baris tabel.
+    //
+    // Parameter:
+    //   idx → indeks baris di array data (originalIdx dari render())
+    //
+    // ALUR:
+    //   1. Tampilkan dialog konfirmasi
+    //   2. Jika dibatalkan (Cancel) → hentikan fungsi
+    //   3. Jika dikonfirmasi (OK) → hapus data, simpan, render ulang
+    //
+    // confirm() → menampilkan dialog bawaan browser dengan dua
+    //   tombol: OK (mengembalikan true) dan Cancel (false).
+    //   Ini mencegah penghapusan tidak sengaja.
+    //
+    // data.splice(idx, 1) → menghapus 1 elemen dari array
+    //   dimulai dari indeks idx. Array langsung dimodifikasi.
+    // ──────────────────────────────────────────────────
+    function hapus(idx) {
+      const konfirmasi = confirm('🗑 Yakin ingin menghapus data ini?');
+      if (!konfirmasi) return; // pengguna klik Cancel → batalkan
+
+      const data = getData();
+      data.splice(idx, 1); // hapus elemen di posisi idx
+      saveData(data);      // simpan array yang sudah dimodifikasi
+      render();            // perbarui tampilan tabel
+    }
+
+
+    // ──────────────────────────────────────────────────
+    // FUNGSI: resetForm()
+    // Mengosongkan semua field input form ke kondisi awal.
+    // Dipanggil: setelah data berhasil disimpan (mode tambah),
+    //            saat tombol Reset diklik, dan oleh batalEdit().
+    //
+    // Kenapa tidak pakai type="reset" HTML bawaan?
+    //   type="reset" hanya mengembalikan elemen ke nilai
+    //   defaultValue (nilai saat halaman pertama dimuat).
+    //   Karena dropdown tanggal & tahun diisi oleh JavaScript
+    //   setelah halaman dimuat, type="reset" tidak dapat
+    //   mengembalikannya ke opsi pertama dengan benar.
+    //   Fungsi ini melakukannya secara eksplisit dan manual.
+    // ──────────────────────────────────────────────────
+    function resetForm() {
+      // Kosongkan field teks dan password
+      document.getElementById('nim').value      = '';
+      document.getElementById('nama').value     = '';
+      document.getElementById('alamat').value   = '';
+      document.getElementById('password').value = '';
+
+      // Hapus centang semua radio button jenis kelamin.
+      // Harus dilakukan manual karena radio tidak punya .value = ''
+      document.querySelectorAll('input[name="jk"]').forEach(r => r.checked = false);
+
+      // Kembalikan semua dropdown ke opsi pertama (indeks 0).
+      // selectedIndex = 0 → memilih <option> pertama dalam daftar.
+      // Untuk tanggal: "01", bulan: "Januari", tahun: tahun sekarang
+      selTanggal.selectedIndex = 0;
+      selBulan.selectedIndex   = 0;
+      selTahun.selectedIndex   = 0;
+    }
+
+
+    // ──────────────────────────────────────────────────
+    // INISIALISASI AWAL — render() pertama kali
+    // Dipanggil sekali saat halaman pertama dibuka.
+    // Tujuan: menampilkan data yang sudah ada di localStorage
+    //   (jika sebelumnya pengguna sudah pernah menyimpan data).
+    // Jika localStorage kosong, tabel akan menampilkan
+    //   pesan "Belum ada data. Silakan isi form di atas."
+    // ──────────────────────────────────────────────────
     render();
-  }
 
-  // Fungsi Reset Form
-  function resetForm() {
-    document.getElementById('nim').value      = '';
-    document.getElementById('nama').value     = '';
-    document.getElementById('alamat').value   = '';
-    document.getElementById('password').value = '';
-
-    document.querySelectorAll('input[name="jk"]').forEach(r => r.checked = false);
-
-    selTanggal.selectedIndex = 0;
-    selBulan.selectedIndex   = 0;
-    selTahun.selectedIndex   = 0;
-  }
-
-  // Jalankan render pertama kali
-  render();
-
-</script>
+  </script>
 </body>
 </html>
